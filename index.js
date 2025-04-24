@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const http = require("http")
+const socketIo = require('socket.io');
 const helmet = require("helmet");
 const morgan = require("morgan");
 const Debugger = require("debug")("app:startup");
@@ -26,6 +28,23 @@ app.use(function (req, res, next) {
   next();
 });
 
+const server = http.createServer(app); // create server from express 
+const io = socketIo(server,{
+  cors:{
+    origin:"*",
+    methods:['GET','POST','PUT','DELETE']
+  }
+})
+// Socket.io connection
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+
+  socket.on('disconnect', () => {
+      console.log('Client disconnected:', socket.id);
+  });
+});
+app.set('io',io);
+
 /* The commented out code `db.sequelize.sync({ force: true })` is a Sequelize method used to
 synchronize the models defined in your application with the actual database tables. */
 db.sequelize
@@ -40,6 +59,6 @@ db.sequelize
 require("./startup/routes")(app);
 
 const PORT = process.env.PORT || 9000;
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+server.listen(PORT, () => {
+  console.log(`Server (HTTP + Socket.IO) listening on port ${PORT}!`);
 });

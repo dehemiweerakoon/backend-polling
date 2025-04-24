@@ -52,6 +52,8 @@ routes.get("/poll/:pollId", async (req, res) => {
       },
       order: [["count", "DESC"]],
     });
+    const io = req.app.get("io");
+    io.emit("pollUpdated", question);
     res.send(question);
   } catch (error) {
     res.send(error.message);
@@ -60,7 +62,6 @@ routes.get("/poll/:pollId", async (req, res) => {
 
 routes.put("/vote/:id", async (req, res) => {
   try {
-    console.log("hiiiii");
     // const {error} = validateQuestion(req.body);
     // if(error) return res.status(400).send(error.details[0].message);
     const question = await Question.findOne({
@@ -74,9 +75,17 @@ routes.put("/vote/:id", async (req, res) => {
     }
     question.count++;
     await question.save();
+    const allQuestions = await Question.findAll({
+      where: {
+        pollId: question.pollId,
+      },
+      order: [["count", "DESC"]],
+    });
+    const io = req.app.get("io");
+    io.emit("pollUpdated", allQuestions);
     res.status(202).send(question);
   } catch (error) {
-    res.status(505).send(error.message);
+    res.status(505).send(error.message); // this is normal friend like giving error ... ... ... ... ...
   }
 });
 
