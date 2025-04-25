@@ -54,6 +54,10 @@ routes.get("/poll/:pollId", async (req, res) => {
     });
    // const io = req.app.get("io");
    // io.emit("pollUpdated", question);
+    const io = req.app.get("io");
+    const roomName = `poll:${question.pollId}`;
+    io.to(roomName).emit("pollUpdated", question);
+    
     res.send(question);
   } catch (error) {
     res.send(error.message);
