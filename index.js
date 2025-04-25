@@ -36,11 +36,32 @@ const io = socketIo(server,{
   }
 })
 // Socket.io connection
+// Socket.io connection
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
+  // Join a poll room
+  socket.on('joinPollRoom', (pollId) => {
+    if (!pollId) {
+      return socket.emit('error', 'Poll ID is required');
+    }
+    
+    // Validate pollId format if needed
+    if (isNaN(parseInt(pollId))) {
+      return socket.emit('error', 'Invalid Poll ID');
+    }
+
+    const roomName = `poll:${pollId}`;
+    socket.join(roomName);
+    console.log(`Client ${socket.id} joined room ${roomName}`);
+    
+    // Optional: Send confirmation to client
+    socket.emit('roomJoined', { pollId, roomName });
+  });
+
   socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+    console.log('Client disconnected:', socket.id);
+    // No need to manually leave rooms - Socket.IO handles this automatically
   });
 });
 app.set('io',io);

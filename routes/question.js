@@ -52,8 +52,8 @@ routes.get("/poll/:pollId", async (req, res) => {
       },
       order: [["count", "DESC"]],
     });
-    const io = req.app.get("io");
-    io.emit("pollUpdated", question);
+   // const io = req.app.get("io");
+   // io.emit("pollUpdated", question);
     res.send(question);
   } catch (error) {
     res.send(error.message);
@@ -62,30 +62,27 @@ routes.get("/poll/:pollId", async (req, res) => {
 
 routes.put("/vote/:id", async (req, res) => {
   try {
-    // const {error} = validateQuestion(req.body);
-    // if(error) return res.status(400).send(error.details[0].message);
-    const question = await Question.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
-    //console.log(question.id + "myyyy");
-    if (isNaN(question.id)) {
-      return res.status(505).send("Invalid Poll Selection");
+    const question = await Question.findByPk(req.params.id);
+    if (!question) {
+      return res.status(404).send("Question not found");
     }
-    question.count++;
+
+    question.count += 1;
     await question.save();
+    
     const allQuestions = await Question.findAll({
-      where: {
-        pollId: question.pollId,
-      },
+      where: { pollId: question.pollId },
       order: [["count", "DESC"]],
     });
+    
+    // Emit to the specific poll room
     const io = req.app.get("io");
-    io.emit("pollUpdated", allQuestions);
-    res.status(202).send(question);
+    const roomName = `poll:${question.pollId}`;
+    io.to(roomName).emit("pollUpdated", allQuestions);
+    
+    res.send(question);
   } catch (error) {
-    res.status(505).send(error.message); // this is normal friend like giving error ... ... ... ... ...
+    res.status(500).send("Server error: " + error.message);
   }
 });
 
