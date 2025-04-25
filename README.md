@@ -25,5 +25,18 @@ A simple and efficient web-based polling system that allows users to create poll
 
 ### Backend
 ```
-   
+   npm start
 ```
+### FrontEnd 
+```
+npm install
+npm start
+```
+### 🤝 Contributing
+Fork this repo
+
+Create a new branch (git checkout -b feature-xyz)
+
+Commit your changes (git commit -am 'Add new feature')
+
+Push and create a Pull Request
